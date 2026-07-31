@@ -1,0 +1,177 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--bg-primary);
+}
+
+.app__header {
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-primary);
+  flex-shrink: 0;
+}
+
+.app__header-inner {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 18px 24px;
+}
+
+.app__header-inner h1 {
+  font-size: 17px;
+  font-weight: 600;
+  margin: 0 0 2px 0;
+  color: var(--text-primary);
+}
+
+.app__header-inner p {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.app__main {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.app__main-inner {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 24px 24px 12px 24px;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.app__upload-section {
+  flex-shrink: 0;
+  margin-bottom: 8px;
+}
+
+.app__upload-error {
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: rgba(229, 103, 95, 0.1);
+  border: 1px solid rgba(229, 103, 95, 0.3);
+  border-radius: var(--radius-md);
+  color: var(--danger);
+  font-size: 13px;
+}
+
+.app__chat-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.app__empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.app__empty-state p {
+  font-size: 14px;
+  max-width: 320px;
+  margin: 0;
+}
+
+.app__messages {
+  display: flex;
+  flex-direction: column;
+}
+
+.app__footer {
+  flex-shrink: 0;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-primary);
+  padding: 16px 24px 20px 24px;
+}
+
+.app__footer-inner {
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+.app__uploaded-chips {
+  margin-bottom: 10px;
+}
+
+.app__uploaded-chips-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.app__clear-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.app__clear-btn:hover {
+  color: var(--danger);
+  background: rgba(229, 103, 95, 0.1);
+}
+
+.app__uploaded-chips-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.app__uploaded-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  max-width: 220px;
+}
+
+.app__uploaded-chip span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app__upload-error--footer {
+  margin-bottom: 10px;
+  margin-top: 0;
+}
+
+@media (max-width: 600px) {
+  .app__header-inner,
+  .app__main-inner,
+  .app__footer-inner {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .app__footer {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
