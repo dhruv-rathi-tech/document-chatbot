@@ -39,7 +39,8 @@ BM25_TOP_K = 15
 
 # Reranker
 RERANK_TOP_K = 6
-RERANK_MODEL = "cross-encoder/ms-marco-MiniLM-L-6-v2"   # was BAAI/bge-reranker-base
+RERANK_MODEL = "BAAI/bge-reranker-base"
+
 
 # Generation
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")

@@ -7,12 +7,13 @@ async function fetchWithNetworkCheck(url, options = {}) {
   } catch (error) {
     if (error instanceof TypeError || error.name === "TypeError" || error.message?.includes("fetch")) {
       throw new Error(
-        `Cannot connect to backend server (${API_URL}). If using Render free tier, the server may be waking up from sleep. Please wait a few seconds and try again.`
+        `Cannot connect to backend server (${API_URL}). Make sure your backend server is running locally on http://localhost:8000.`
       );
     }
     throw error;
   }
 }
+
 
 export async function uploadDocuments(files, sessionId) {
   const formData = new FormData();
