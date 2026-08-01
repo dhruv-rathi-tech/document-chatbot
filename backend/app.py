@@ -23,7 +23,7 @@ app = FastAPI(title="RAG Chatbot API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://document-chatbot-alpha.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
