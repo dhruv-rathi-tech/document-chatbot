@@ -123,7 +123,7 @@ Open `http://localhost:5173`, upload a document, and start asking questions.
 
 Live at:
 - Frontend: https://document-chatbot-alpha.vercel.app
-- Backend: https://your-app.onrender.com
+- Backend: https://document-chatbot-lrz7.onrender.com
 
 The backend is deployed on [Render](https://render.com) (`render.yaml` included) and the frontend on [Vercel](https://vercel.com).
 
