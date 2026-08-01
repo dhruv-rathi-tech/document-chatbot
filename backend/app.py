@@ -1,10 +1,16 @@
+import os
 import shutil
 import uuid
 from pathlib import Path
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+
+# Silence ONNX Runtime device discovery warnings on headless Linux (Render CPU containers)
+os.environ["ORT_LOG_LEVEL"] = "3"
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 from config.config import (
     get_session_paths,
@@ -13,21 +19,36 @@ from config.config import (
     SESSIONS_DIR,
 )
 from src.ingestion.ingest import load_documents, split_documents
-from src.embeddings.embedding import create_vector_db
+from src.embeddings.embedding import create_vector_db, get_embedding_model
 from src.retrieval.retrieve import HybridRetriever
 from src.reranking.rerank import rerank
 from src.generation.generate import generate
 from src.evaluation.evaluate import evaluate_retrieval, evaluate_reranker
 
-app = FastAPI(title="RAG Chatbot API")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Warm up embedding model on app startup
+    try:
+        get_embedding_model()
+    except Exception as e:
+        print(f"Embedding model warmup warning: {e}")
+    yield
+
+
+app = FastAPI(title="RAG Chatbot API", lifespan=lifespan)
+
+raw_origins = os.getenv("ALLOWED_ORIGINS", "*")
+origins = [o.strip() for o in raw_origins.split(",") if o.strip()]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://document-chatbot-alpha.vercel.app"],
-    allow_credentials=True,
+    allow_origins=origins,
+    allow_credentials=False if "*" in origins else True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # In-memory registry of which sessions have a ready vector DB + retriever loaded, so /chat doesn't reload BM25/Chroma from disk on every message.
 active_retrievers: dict[str, HybridRetriever] = {}

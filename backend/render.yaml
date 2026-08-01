@@ -10,3 +10,10 @@ services:
         sync: false
       - key: PYTHON_VERSION
         value: 3.11.9
+      - key: ALLOWED_ORIGINS
+        value: "*"
+      - key: ORT_LOG_LEVEL
+        value: "3"
+      - key: CUDA_VISIBLE_DEVICES
+        value: ""
+
