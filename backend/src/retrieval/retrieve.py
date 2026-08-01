@@ -4,7 +4,7 @@ from rank_bm25 import BM25Okapi
 from config.config import *
 import re
 
-from src.embeddings.embedding import embedding_model
+from src.embeddings.embedding import get_embedding_model
 
 
 def tokenize(text):
@@ -32,7 +32,7 @@ class HybridRetriever:
         self.vector_store = Chroma(
             persist_directory=str(chroma_dir),
             collection_name=collection_name,
-            embedding_function=embedding_model,
+            embedding_function=get_embedding_model(),
         )
 
         all_docs = self.vector_store.get(include=["documents", "metadatas"])

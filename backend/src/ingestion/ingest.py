@@ -7,8 +7,15 @@ import pandas as pd
 
 from src.ingestion.clean import clean_text
 
-md = MarkItDown()
+_md = None
 SUPPORTED = {".pdf", ".docx", ".pptx", ".xlsx", ".txt", ".md"}
+
+
+def get_markitdown():
+    global _md
+    if _md is None:
+        _md = MarkItDown()
+    return _md
 
 
 def load_excel(file_path):
@@ -79,7 +86,7 @@ def load_documents(dataset_dir=None):
             if file_path.suffix.lower() == ".xlsx":
                 documents.extend(load_excel(file_path))
             else:
-                result = md.convert(file_path)
+                result = get_markitdown().convert(file_path)
                 text = clean_text(result.text_content)
 
                 documents.append(
@@ -119,3 +126,4 @@ def split_documents(documents):
         chunks.extend(split_chunks)
 
     return chunks
+    
