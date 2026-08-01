@@ -21,18 +21,22 @@ from config.config import (
 from src.ingestion.ingest import load_documents, split_documents
 from src.embeddings.embedding import create_vector_db, get_embedding_model
 from src.retrieval.retrieve import HybridRetriever
-from src.reranking.rerank import rerank
+from src.reranking.rerank import rerank, get_reranker
 from src.generation.generate import generate
 from src.evaluation.evaluate import evaluate_retrieval, evaluate_reranker
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Warm up embedding model on app startup
+    # Warm up embedding and reranker models on app startup
     try:
         get_embedding_model()
     except Exception as e:
         print(f"Embedding model warmup warning: {e}")
+    try:
+        get_reranker()
+    except Exception as e:
+        print(f"Reranker model warmup warning: {e}")
     yield
 
 
@@ -108,65 +112,79 @@ async def upload_documents(
     if not saved_names:
         raise HTTPException(status_code=400, detail="No valid files were uploaded.")
 
+    try:
+        documents = load_documents(dataset_dir=dataset_dir)
+        if not documents:
+            raise HTTPException(
+                status_code=400,
+                detail="Could not extract any text from the uploaded file(s).",
+            )
 
-    documents = load_documents(dataset_dir=dataset_dir)
-    if not documents:
-        raise HTTPException(
-            status_code=400,
-            detail="Could not extract any text from the uploaded file(s).",
+        chunks = split_documents(documents)
+        create_vector_db(chunks, chroma_dir=chroma_dir)
+
+        retriever = HybridRetriever()
+        retriever.load_vector_db(chroma_dir=chroma_dir)
+        active_retrievers[session_id] = retriever
+        session_sources[session_id] = saved_names
+
+        return UploadResponse(
+            session_id=session_id,
+            files_processed=saved_names,
+            chunks_indexed=len(chunks),
         )
-
-    chunks = split_documents(documents)
-    create_vector_db(chunks, chroma_dir=chroma_dir)
-
-    retriever = HybridRetriever()
-    retriever.load_vector_db(chroma_dir=chroma_dir)
-    active_retrievers[session_id] = retriever
-    session_sources[session_id] = saved_names
-
-    return UploadResponse(
-        session_id=session_id,
-        files_processed=saved_names,
-        chunks_indexed=len(chunks),
-    )
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Failed to process documents: {str(e)}")
 
 
 @app.post("/chat", response_model=ChatResponse)
-def chat(request: ChatRequest):
-    retriever = active_retrievers.get(request.session_id)
+async def chat(request: ChatRequest):
+    try:
+        retriever = active_retrievers.get(request.session_id)
 
-    if retriever is None:
-        _, chroma_dir = get_session_paths(request.session_id)
-        if not any(chroma_dir.iterdir()):
-            raise HTTPException(
-                status_code=404,
-                detail="No documents found for this session. Please upload documents first.",
+        if retriever is None:
+            _, chroma_dir = get_session_paths(request.session_id)
+            if not chroma_dir.exists() or not any(chroma_dir.iterdir()):
+                raise HTTPException(
+                    status_code=404,
+                    detail="No documents found for this session. Please upload documents first.",
+                )
+            retriever = HybridRetriever()
+            retriever.load_vector_db(chroma_dir=chroma_dir)
+            active_retrievers[request.session_id] = retriever
+
+        if not request.query or not request.query.strip():
+            raise HTTPException(status_code=400, detail="Query cannot be empty.")
+
+        retrieval_results = retriever.hybrid_retrieve(request.query)
+        retrieval_results = evaluate_retrieval(retrieval_results)
+
+        if not retrieval_results:
+            return ChatResponse(
+                answer="I don't have enough information in the provided documents to answer this question."
             )
-        retriever = HybridRetriever()
-        retriever.load_vector_db(chroma_dir=chroma_dir)
-        active_retrievers[request.session_id] = retriever
 
-    if not request.query or not request.query.strip():
-        raise HTTPException(status_code=400, detail="Query cannot be empty.")
+        reranked_results = rerank(request.query, retrieval_results)
+        reranked_results = evaluate_reranker(reranked_results)
 
-    retrieval_results = retriever.hybrid_retrieve(request.query)
-    retrieval_results = evaluate_retrieval(retrieval_results)
+        if not reranked_results:
+            return ChatResponse(
+                answer="I don't have enough information in the provided documents to answer this question."
+            )
 
-    if not retrieval_results:
-        return ChatResponse(
-            answer="I don't have enough information in the provided documents to answer this question."
-        )
+        answer = generate(request.query, reranked_results)
+        return ChatResponse(answer=answer)
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error during chat: {str(e)}")
 
-    reranked_results = rerank(request.query, retrieval_results)
-    reranked_results = evaluate_reranker(reranked_results)
-
-    if not reranked_results:
-        return ChatResponse(
-            answer="I don't have enough information in the provided documents to answer this question."
-        )
-
-    answer = generate(request.query, reranked_results)
-    return ChatResponse(answer=answer)
 
 
 @app.delete("/session/{session_id}")
