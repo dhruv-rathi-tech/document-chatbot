@@ -1,18 +1,4 @@
-const rawUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
-const API_URL = rawUrl.replace(/\/+$/, "");
-
-async function fetchWithNetworkCheck(url, options = {}) {
-  try {
-    return await fetch(url, options);
-  } catch (error) {
-    if (error instanceof TypeError || error.name === "TypeError" || error.message?.includes("fetch")) {
-      throw new Error(
-        `Cannot connect to backend server (${API_URL}). Make sure your backend server is running locally on http://localhost:8000.`
-      );
-    }
-    throw error;
-  }
-}
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 
 export async function uploadDocuments(files, sessionId) {
@@ -24,7 +10,7 @@ export async function uploadDocuments(files, sessionId) {
     formData.append("session_id", sessionId);
   }
 
-  const response = await fetchWithNetworkCheck(`${API_URL}/upload`, {
+  const response = await fetch(`${API_URL}/upload`, {
     method: "POST",
     body: formData,
   });
@@ -37,8 +23,9 @@ export async function uploadDocuments(files, sessionId) {
   return response.json();
 }
 
+
 export async function sendChatMessage(sessionId, query) {
-  const response = await fetchWithNetworkCheck(`${API_URL}/chat`, {
+  const response = await fetch(`${API_URL}/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ session_id: sessionId, query }),
@@ -51,6 +38,7 @@ export async function sendChatMessage(sessionId, query) {
 
   return response.json();
 }
+
 
 export async function clearSession(sessionId) {
   if (!sessionId) return;
@@ -68,4 +56,5 @@ async function safeJson(response) {
     return null;
   }
 }
+
 

@@ -8,11 +8,8 @@ from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-# Silence ONNX Runtime device discovery warnings on headless Linux (Render CPU containers)
-os.environ["ORT_LOG_LEVEL"] = "3"
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
-
 from config.config import (
+
     get_session_paths,
     ALLOWED_EXTENSIONS,
     MAX_FILE_SIZE_MB,
