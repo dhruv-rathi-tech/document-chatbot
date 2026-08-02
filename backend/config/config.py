@@ -41,9 +41,11 @@ BM25_TOP_K = 15
 RERANK_TOP_K = 6
 RERANK_MODEL = "BAAI/bge-reranker-base"
 
-
 # Generation
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+if not GOOGLE_API_KEY:
+    raise ValueError("GOOGLE_API_KEY not found. Add it to your .env file.")
+
 LLM_MODEL = "gemini-2.5-flash"
 TEMPERATURE = 0.1
 
