@@ -2,8 +2,6 @@
 
 A retrieval-augmented chatbot that lets you upload your own documents (PDF, Word, PowerPoint, Excel, or plain text) and ask questions about them. The backend runs a hybrid dense + keyword retrieval pipeline with cross-encoder reranking before generating an answer, and the frontend is a minimal dark-themed chat interface.
 
-**Live demo:** [document-chatbot-alpha.vercel.app](https://document-chatbot-alpha.vercel.app)
-
 ## How it works
 
 1. You upload one or more documents through the UI.
@@ -13,7 +11,7 @@ A retrieval-augmented chatbot that lets you upload your own documents (PDF, Word
 5. A cross-encoder reranks the merged candidates against the query, and a threshold-based filter drops anything that isn't a strong enough match.
 6. The remaining chunks are passed to Gemini along with the question, and the model answers strictly from that context.
 
-Every upload gets its own session ID and its own isolated vector store, so documents from different users (or different browser tabs) never mix.
+Every upload gets its own session ID and its own isolated vector store, so documents from different sessions never mix.
 
 **API endpoints:**
 - `POST /upload` — upload one or more files, returns a session ID and chunk count
@@ -44,8 +42,7 @@ Uploads are restricted to `.pdf`, `.docx`, `.pptx`, `.xlsx`, `.txt`, and `.md`, 
 │   │   │   └── generate.py        # prompt template + Gemini call
 │   │   └── evaluation/
 │   │       └── evaluate.py        # score-based filtering for retrieval and reranking
-│   ├── requirements.txt
-│   └── render.yaml
+│   └── requirements.txt
 └── frontend/
     ├── src/
     │   ├── App.jsx                 # top-level layout and session state
@@ -56,7 +53,7 @@ Uploads are restricted to `.pdf`, `.docx`, `.pptx`, `.xlsx`, `.txt`, and `.md`, 
     │       ├── ChatInput.jsx
     │       ├── AttachButton.jsx
     │       └── TypingIndicator.jsx
-    └── vercel.json
+    └── package.json
 ```
 
 ## Retrieval pipeline
@@ -65,13 +62,11 @@ Uploads are restricted to `.pdf`, `.docx`, `.pptx`, `.xlsx`, `.txt`, and `.md`, 
 
 **Retrieval.** Two retrievers run per query — a dense retriever over the Chroma vector store and a BM25 retriever over the same chunk set — and their results are merged by document identity. On overlap, the merge keeps the lower (better) distance for dense scores and the higher (better) score for BM25.
 
-**Filtering and reranking.** Merged candidates first pass through a score threshold on the raw retrieval scores, then a cross-encoder (`cross-encoder/ms-marco-MiniLM-L-6-v2`) reranks the survivors against the query, followed by a second threshold on the reranked scores. If nothing survives at any stage, the API returns an explicit "not enough information" response instead of forcing an answer.
+**Filtering and reranking.** Merged candidates first pass through a score threshold on the raw retrieval scores, then a cross-encoder (`BAAI/bge-reranker-base`) reranks the survivors against the query, followed by a second threshold on the reranked scores. If nothing survives at any stage, the API returns an explicit "not enough information" response instead of forcing an answer.
 
 **Generation.** The final context chunks are handed to Gemini (`gemini-2.5-flash`) with a prompt that explicitly restricts it to the provided context, asks it to flag conflicting information rather than silently pick one side, and appends a source list after generation (not something the model writes itself).
 
 ## Running it locally
-
-The steps below are for running your own local instance. If you just want to try the app, use the [live demo](https://document-chatbot-alpha.vercel.app) instead.
 
 You'll need Python 3.11+, Node 18+, and a free Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey).
 
@@ -119,29 +114,12 @@ npm run dev
 
 Open `http://localhost:5173`, upload a document, and start asking questions.
 
-## Deployment
-
-Live at:
-- Frontend: https://document-chatbot-alpha.vercel.app
-- Backend: https://document-chatbot-lrz7.onrender.com
-
-The backend is deployed on [Render](https://render.com) (`render.yaml` included) and the frontend on [Vercel](https://vercel.com).
-
-CORS in `backend/app.py` is locked to `https://document-chatbot-alpha.vercel.app`.
-
-To deploy your own copy:
-
-**Backend on Render:** point Render at the `backend/` directory as the root, let it pick up `render.yaml`, and add `GOOGLE_API_KEY` under the service's environment variables. Render's free tier spins down on inactivity, so the first request after idling will be slow while the embedding and reranker models reload — this is a hosting characteristic, not a bug.
-
-**Frontend on Vercel:** point Vercel at the `frontend/` directory, let it auto-detect Vite, and set `VITE_API_URL` to your deployed backend URL (no trailing slash).
-
 ## Sessions and data lifecycle
 
 Each browser tab gets a UUID session on first upload. That session's files and vector store live under `backend/data/sessions/<session_id>/` and are deleted when the user hits "Clear" or closes the tab (best-effort, via `beforeunload`). There's no database or login layer — this is intentionally stateless and disposable, since the goal is quick document Q&A rather than persistent chat history.
 
 ## Known limitations
 
-- Free-tier hosting means cold starts after idling.
-- The embedding model and cross-encoder both need real memory; 512MB instances may struggle under load.
+- The embedding model and cross-encoder both need real memory to run comfortably.
 - No persistent history across sessions — closing the tab clears everything.
 - No authentication — anything you upload is only isolated by session ID, not access-controlled.
