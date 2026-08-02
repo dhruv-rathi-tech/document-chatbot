@@ -100,7 +100,9 @@ def load_documents(dataset_dir=None):
                 )
 
         except Exception as e:
-            print(f"Skipping {file_path.name}: {e}")
+            import traceback
+            print(f"\n{'='*60}\nFAILED to parse {file_path.name}: {e}\n{'='*60}")
+            traceback.print_exc()
 
     return documents
 
