@@ -117,9 +117,3 @@ Open `http://localhost:5173`, upload a document, and start asking questions.
 ## Sessions and data lifecycle
 
 Each browser tab gets a UUID session on first upload. That session's files and vector store live under `backend/data/sessions/<session_id>/` and are deleted when the user hits "Clear" or closes the tab (best-effort, via `beforeunload`). There's no database or login layer — this is intentionally stateless and disposable, since the goal is quick document Q&A rather than persistent chat history.
-
-## Known limitations
-
-- The embedding model and cross-encoder both need real memory to run comfortably.
-- No persistent history across sessions — closing the tab clears everything.
-- No authentication — anything you upload is only isolated by session ID, not access-controlled.
