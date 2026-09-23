@@ -1,6 +1,6 @@
-# Document Chatbot
+# DocMate
 
-A retrieval-augmented chatbot that lets you upload your own documents (PDF, Word, PowerPoint, Excel, or plain text) and ask questions about them. The backend runs a hybrid dense + keyword retrieval pipeline with cross-encoder reranking before generating an answer, and the frontend is a minimal dark-themed chat interface.
+DocMate is a retrieval-augmented document assistant that lets you upload your own documents (PDF, Word, PowerPoint, Excel, or plain text) and ask questions about them. The backend runs a hybrid dense + keyword retrieval pipeline with cross-encoder reranking before generating an answer, and the frontend is a minimal dark-themed chat interface.
 
 ## How it works
 

@@ -37,7 +37,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="RAG Chatbot API", lifespan=lifespan)
+app = FastAPI(title="DocMate API", lifespan=lifespan)
 
 raw_origins = os.getenv("ALLOWED_ORIGINS", "*")
 origins = [o.strip() for o in raw_origins.split(",") if o.strip()]
@@ -70,7 +70,7 @@ class UploadResponse(BaseModel):
 
 @app.get("/")
 def health_check():
-    return {"status": "ok", "message": "RAG Chatbot API is running."}
+    return {"status": "ok", "message": "DocMate API is running."}
 
 
 @app.post("/upload", response_model=UploadResponse)

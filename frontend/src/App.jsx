@@ -82,7 +82,7 @@ export default function App() {
     <div className="app">
       <header className="app__header">
         <div className="app__header-inner">
-          <h1>Document Chat</h1>
+          <h1>DocMate</h1>
           <p>Upload your documents and ask questions about them.</p>
         </div>
       </header>
