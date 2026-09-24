@@ -1,0 +1,24 @@
+# Environment & Secrets
+.env
+.env.*
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+backend/venv/
+backend/data/sessions/*
+!backend/data/sessions/.gitkeep
+
+# Node
+node_modules/
+frontend/node_modules/
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

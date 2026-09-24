@@ -1,3 +1,14 @@
+---
+title: DocMate - Document Assistant
+emoji: 📄
+colorFrom: indigo
+colorTo: purple
+sdk: gradio
+sdk_version: 5.16.0
+app_file: app.py
+pinned: false
+---
+
 # DocMate
 
 DocMate is a retrieval-augmented document assistant that lets you upload your own documents (PDF, Word, PowerPoint, Excel, or plain text) and ask questions about them. The backend runs a hybrid dense + keyword retrieval pipeline with cross-encoder reranking before generating an answer, and the frontend is a minimal dark-themed chat interface.
@@ -117,3 +128,37 @@ Open `http://localhost:5173`, upload a document, and start asking questions.
 ## Sessions and data lifecycle
 
 Each browser tab gets a UUID session on first upload. That session's files and vector store live under `backend/data/sessions/<session_id>/` and are deleted when the user hits "Clear" or closes the tab (best-effort, via `beforeunload`). There's no database or login layer — this is intentionally stateless and disposable, since the goal is quick document Q&A rather than persistent chat history.
+
+## Deployment (Hugging Face Spaces - 100% Free Tier)
+
+This repository is configured to deploy directly to Hugging Face Spaces using the free **Gradio SDK** (2 vCPU, 16 GB RAM). It serves the custom React frontend at `/`, the FastAPI endpoints at `/upload` and `/chat`, and a companion Gradio interface at `/gradio`.
+
+### Step-by-Step Deployment:
+
+1. **Create a Hugging Face Space**:
+   - Go to [huggingface.co/new-space](https://huggingface.co/new-space).
+   - Enter a **Space name**: e.g., `docmate`.
+   - Select Space SDK: **Gradio** -> **Blank** (Free).
+   - Space hardware: **ZeroGPU (Free)**.
+   - Visibility: **Public**.
+   - Click **Create Space**.
+
+2. **Push your repository**:
+   - Make sure your latest build is committed:
+     ```bash
+     git add .
+     git commit -m "Configure Hugging Face Space deployment"
+     ```
+   - Connect your GitHub repository directly to the Hugging Face Space, OR push directly via Git:
+     ```bash
+     git remote add space https://huggingface.co/spaces/<your-username>/docmate
+     git push space main
+     ```
+
+3. **Add Secret**:
+   - In your Hugging Face Space, go to **Settings** -> **Variables and secrets**.
+   - Under **Secrets**, click **New secret**:
+     - **Name**: `GOOGLE_API_KEY`
+     - **Value**: `your_gemini_api_key`
+   - Hugging Face will automatically install `requirements.txt`, launch `app.py`, and run your app.
+   - Access your live app at `https://<your-username>-<your-space-name>.hf.space/`!
