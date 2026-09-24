@@ -4,6 +4,9 @@ import uuid
 import shutil
 from pathlib import Path
 
+# Disable Gradio SSR mode to prevent port 7861 bind conflict on Hugging Face Spaces
+os.environ["GRADIO_SSR_MODE"] = "false"
+
 # Add backend directory to sys.path
 BASE_DIR = Path(__file__).resolve().parent
 BACKEND_DIR = BASE_DIR / "backend"
@@ -105,7 +108,7 @@ with gr.Blocks(title="DocMate") as demo:
 
 # Mount Gradio app onto FastAPI under /gradio
 # Root / continues to serve the React SPA
-app = gr.mount_gradio_app(app, demo, path="/gradio")
+app = gr.mount_gradio_app(app, demo, path="/gradio", ssr_mode=False)
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 7860))
