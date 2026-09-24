@@ -6,7 +6,7 @@ _reranker = None
 def get_reranker():
     global _reranker
     if _reranker is None:
-        _reranker = CrossEncoder(RERANK_MODEL, device="cpu")
+        _reranker = CrossEncoder(RERANK_MODEL)
     return _reranker
 
 

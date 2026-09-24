@@ -4,12 +4,8 @@ import uuid
 from pathlib import Path
 from contextlib import asynccontextmanager
 
-# pyrefly: ignore [missing-import]
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
-from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-# pyrefly: ignore [missing-import]
 from pydantic import BaseModel
 
 from config.config import (
@@ -72,7 +68,7 @@ class UploadResponse(BaseModel):
     chunks_indexed: int
 
 
-@app.get("/health")
+@app.get("/")
 def health_check():
     return {"status": "ok", "message": "DocMate API is running."}
 
@@ -199,33 +195,3 @@ def clear_session(session_id: str):
         shutil.rmtree(session_dir)
 
     return {"status": "deleted", "session_id": session_id}
-
-
-# ---------------------------------------------------------
-# Static Frontend Serving (Unified Container & Production)
-# ---------------------------------------------------------
-FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"
-if not FRONTEND_DIST.exists():
-    FRONTEND_DIST = Path(__file__).resolve().parent / "static"
-
-if FRONTEND_DIST.exists() and (FRONTEND_DIST / "index.html").exists():
-    assets_dir = FRONTEND_DIST / "assets"
-    if assets_dir.exists():
-        app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")
-
-    @app.get("/")
-    async def serve_index():
-        return FileResponse(FRONTEND_DIST / "index.html")
-
-    @app.get("/{full_path:path}")
-    async def serve_static_or_spa(full_path: str):
-        if full_path in ("upload", "chat", "health") or full_path.startswith(("session", "docs", "openapi.json")):
-            raise HTTPException(status_code=404, detail="Not found")
-        file_path = FRONTEND_DIST / full_path
-        if file_path.is_file():
-            return FileResponse(file_path)
-        return FileResponse(FRONTEND_DIST / "index.html")
-else:
-    @app.get("/")
-    def root_health_fallback():
-        return {"status": "ok", "message": "DocMate API is running."}

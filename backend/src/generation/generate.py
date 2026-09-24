@@ -33,24 +33,11 @@ Answer
 """)
 
 
-_llm = None
-
-
-def get_llm():
-    global _llm
-    api_key = os.getenv("GOOGLE_API_KEY") or GOOGLE_API_KEY
-    if not api_key:
-        raise ValueError(
-            "GOOGLE_API_KEY is missing. Please set your GOOGLE_API_KEY in the Hugging Face Space secrets or .env file."
-        )
-    if _llm is None:
-        _llm = ChatGoogleGenerativeAI(
-            model=LLM_MODEL,
-            google_api_key=api_key,
-            temperature=TEMPERATURE,
-        )
-    return _llm
-
+llm = ChatGoogleGenerativeAI(
+    model=LLM_MODEL,
+    google_api_key=GOOGLE_API_KEY,
+    temperature=TEMPERATURE,
+)
 
 def generate(query, reranked_results):
     context = "\n\n".join(
@@ -60,7 +47,7 @@ def generate(query, reranked_results):
     )
 
     prompt = PROMPT_TEMPLATE.format_messages(context=context, query=query)
-    response = get_llm().invoke(prompt)
+    response = llm.invoke(prompt)
     answer = response.content.strip()
 
     seen = []

@@ -6,14 +6,9 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
-import tempfile
-
 # Base directory where all per-session data lives (uploads + vector DBs).
-# In Hugging Face Spaces (SPACE_ID present), use system temp directory to ensure write permissions.
-if os.getenv("SPACE_ID") or os.getenv("SESSIONS_DIR"):
-    SESSIONS_DIR = Path(os.getenv("SESSIONS_DIR", str(Path(tempfile.gettempdir()) / "docmate_sessions")))
-else:
-    SESSIONS_DIR = BASE_DIR / "data" / "sessions"
+# Each session gets its own subfolder so different users' documents never mix.
+SESSIONS_DIR = BASE_DIR / "data" / "sessions"
 SESSIONS_DIR.mkdir(parents=True, exist_ok=True)
 
 
@@ -47,7 +42,9 @@ RERANK_TOP_K = 6
 RERANK_MODEL = "BAAI/bge-reranker-base"
 
 # Generation
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+if not GOOGLE_API_KEY:
+    raise ValueError("GOOGLE_API_KEY not found. Add it to your .env file.")
 
 LLM_MODEL = "gemini-2.5-flash"
 TEMPERATURE = 0.1
