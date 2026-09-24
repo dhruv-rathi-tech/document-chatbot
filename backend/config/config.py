@@ -6,9 +6,6 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
-# In ZeroGPU or CPU environments, hide GPU to prevent ZeroGPU unleased CUDA errors
-os.environ.setdefault("CUDA_VISIBLE_DEVICES", "")
-
 import tempfile
 
 # Base directory where all per-session data lives (uploads + vector DBs).

@@ -7,6 +7,26 @@ from pathlib import Path
 # Disable Gradio SSR mode to prevent port 7861 bind conflict on Hugging Face Spaces
 os.environ["GRADIO_SSR_MODE"] = "false"
 
+# ZeroGPU integration: Hugging Face ZeroGPU requires at least one @spaces.GPU function
+try:
+    import spaces
+except ImportError:
+    class spaces:
+        @staticmethod
+        def GPU(fn=None, duration=None):
+            if fn is None:
+                def decorator(f):
+                    return f
+                return decorator
+            return fn
+
+
+@spaces.GPU(duration=10)
+def _gpu_probe():
+    """Satisfies Hugging Face ZeroGPU startup probe."""
+    return True
+
+
 # Add backend directory to sys.path
 BASE_DIR = Path(__file__).resolve().parent
 BACKEND_DIR = BASE_DIR / "backend"
@@ -58,6 +78,7 @@ def gradio_upload(files, session_state):
         return f"Processing error: {str(e)}", session_state
 
 
+@spaces.GPU
 def gradio_chat(message, history, session_state):
     if not session_state or session_state not in active_retrievers:
         return "Please upload at least one document first before asking questions."
